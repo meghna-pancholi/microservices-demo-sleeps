@@ -69,13 +69,17 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: {{ .Values.images.repository }}/{{ .Values.currencyService.name }}:{{ .Values.images.tag | default .Chart.AppVersion }}
+        image: meghnapancholi/online-boutique:currencyservice-sleep2
         ports:
         - name: grpc
           containerPort: 7000
         env:
         - name: PORT
           value: "7000"
+        {{- if .Values.currencyService.extraLatency }}
+        - name: EXTRA_LATENCY
+          value: {{ .Values.currencyService.extraLatency | quote }}
+        {{- end }}
         {{- if .Values.opentelemetryCollector.create }}
         - name: COLLECTOR_SERVICE_ADDR
           value: "{{ .Values.opentelemetryCollector.name }}:4317"

@@ -73,7 +73,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: {{ .Values.images.repository }}/{{ .Values.cartService.name }}:{{ .Values.images.tag | default .Chart.AppVersion }}
+        image: meghnapancholi/online-boutique:cartservice-sleep3
         ports:
         - containerPort: 7070
         env:
@@ -83,6 +83,10 @@ spec:
         - name: REDIS_ADDR
         {{- end }}
           value: {{ .Values.cartDatabase.connectionString | quote }}
+        {{- if .Values.cartService.extraLatency }}
+        - name: EXTRA_LATENCY
+          value: {{ .Values.cartService.extraLatency | quote }}
+        {{- end }}
         resources:
           {{- toYaml .Values.cartService.resources | nindent 10 }}
         readinessProbe:

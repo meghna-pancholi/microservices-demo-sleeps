@@ -18,6 +18,7 @@ using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using cartservice.cartstore;
 using Hipstershop;
+using Microsoft.Extensions.Configuration;
 
 namespace cartservice.services
 {
@@ -25,25 +26,60 @@ namespace cartservice.services
     {
         private readonly static Empty Empty = new Empty();
         private readonly ICartStore _cartStore;
+        private readonly int _extraLatency;
 
-        public CartService(ICartStore cartStore)
+        public CartService(ICartStore cartStore, IConfiguration configuration)
         {
             _cartStore = cartStore;
+            var latencyStr = configuration.GetValue<string>("EXTRA_LATENCY", "0ms");
+            _extraLatency = ParseLatency(latencyStr);
+            Console.WriteLine($"Extra latency set to {_extraLatency}ms");
+        }
+
+        private int ParseLatency(string latencyStr)
+        {
+            if (string.IsNullOrEmpty(latencyStr)) return 0;
+            if (latencyStr.EndsWith("ms"))
+            {
+                if (int.TryParse(latencyStr.Substring(0, latencyStr.Length - 2), out int ms))
+                {
+                    return ms;
+                }
+            }
+            else if (latencyStr.EndsWith("s"))
+            {
+                if (int.TryParse(latencyStr.Substring(0, latencyStr.Length - 1), out int seconds))
+                {
+                    return seconds * 1000;
+                }
+            }
+            return 0;
+        }
+
+        private async Task AddLatency()
+        {
+            if (_extraLatency > 0)
+            {
+                await Task.Delay(_extraLatency);
+            }
         }
 
         public async override Task<Empty> AddItem(AddItemRequest request, ServerCallContext context)
         {
+            await AddLatency();
             await _cartStore.AddItemAsync(request.UserId, request.Item.ProductId, request.Item.Quantity);
             return Empty;
         }
 
-        public override Task<Cart> GetCart(GetCartRequest request, ServerCallContext context)
+        public override async Task<Cart> GetCart(GetCartRequest request, ServerCallContext context)
         {
-            return _cartStore.GetCartAsync(request.UserId);
+            await AddLatency();
+            return await _cartStore.GetCartAsync(request.UserId);
         }
 
         public async override Task<Empty> EmptyCart(EmptyCartRequest request, ServerCallContext context)
         {
+            await AddLatency();
             await _cartStore.EmptyCartAsync(request.UserId);
             return Empty;
         }

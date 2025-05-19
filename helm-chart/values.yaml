@@ -73,6 +73,8 @@ adService:
 cartService:
   create: true
   name: cartservice
+  # Specifies an extra latency to any request on cartservice, by default no extra latency.
+  extraLatency: "50ms"
   resources:
     requests:
       cpu: 200m
@@ -85,7 +87,7 @@ checkoutService:
   create: true
   name: checkoutservice
   # Specifies an extra latency to any request on checkoutservice, by default no extra latency.
-  extraLatency: ""
+  extraLatency: "50ms"
   resources:
     requests:
       cpu: 100m
@@ -97,6 +99,8 @@ checkoutService:
 currencyService:
   create: true
   name: currencyservice
+  # Specifies an extra latency to any request on currencyservice, by default no extra latency.
+  extraLatency: "100ms"
   resources:
     requests:
       cpu: 100m
@@ -168,7 +172,7 @@ productCatalogService:
   create: true
   name: productcatalogservice
   # Specifies an extra latency to any request on productcatalogservice, by default no extra latency.
-  extraLatency: ""
+  extraLatency: "0ms"
   resources:
     requests:
       cpu: 100m
