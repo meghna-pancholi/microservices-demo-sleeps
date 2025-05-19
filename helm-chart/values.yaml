@@ -84,6 +84,8 @@ cartService:
 checkoutService:
   create: true
   name: checkoutservice
+  # Specifies an extra latency to any request on checkoutservice, by default no extra latency.
+  extraLatency: ""
   resources:
     requests:
       cpu: 100m
