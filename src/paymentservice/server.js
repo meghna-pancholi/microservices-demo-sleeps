@@ -20,16 +20,22 @@ const charge = require('./charge');
 
 const logger = require('./logger')
 
+// Parse extra latency from environment variable
+const parseLatency = (latencyStr) => {
+  if (!latencyStr) return 0;
+  const match = latencyStr.match(/^(\d+)(ms|s)$/);
+  if (!match) return 0;
+  const [, value, unit] = match;
+  return unit === 's' ? parseInt(value) * 1000 : parseInt(value);
+};
+
 class HipsterShopServer {
   constructor(protoRoot, port = HipsterShopServer.PORT) {
     this.port = port;
 
     // set injected latency
-    this.extraLatency = 0;
-    if (process.env.EXTRA_LATENCY) {
-      this.extraLatency = parseInt(process.env.EXTRA_LATENCY);
-      logger.info(`extra latency enabled (duration: ${this.extraLatency}ms)`);
-    }
+    this.extraLatency = parseLatency(process.env.EXTRA_LATENCY);
+    logger.info(`Extra latency set to ${this.extraLatency}ms`);
 
     this.packages = {
       hipsterShop: this.loadProto(path.join(protoRoot, 'demo.proto')),

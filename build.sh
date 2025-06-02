@@ -31,11 +31,11 @@
 # docker tag $ADSERVICE_IMAGE_ID meghnapancholi/online-boutique:adservice-sleep
 # docker push meghnapancholi/online-boutique:adservice-sleep
 
-# # build shippingservice
-# docker build -t shippingservice -f src/shippingservice/Dockerfile src/shippingservice
-# SHIPPINGSERVICE_IMAGE_ID=$(docker images --format="{{.Repository}} {{.ID}}" | grep "^shippingservice " | cut -d' ' -f2)
-# docker tag $SHIPPINGSERVICE_IMAGE_ID meghnapancholi/online-boutique:shippingservice-sleep
-# docker push meghnapancholi/online-boutique:shippingservice-sleep
+# build shippingservice
+docker build -t shippingservice -f src/shippingservice/Dockerfile src/shippingservice
+SHIPPINGSERVICE_IMAGE_ID=$(docker images --format="{{.Repository}} {{.ID}}" | grep "^shippingservice " | cut -d' ' -f2)
+docker tag $SHIPPINGSERVICE_IMAGE_ID meghnapancholi/online-boutique:shippingservice-sleep
+docker push meghnapancholi/online-boutique:shippingservice-sleep
 
 # #build emailservice
 # docker build -t emailservice -f src/emailservice/Dockerfile src/emailservice
@@ -43,11 +43,24 @@
 # docker tag $EMAILSERVICE_IMAGE_ID meghnapancholi/online-boutique:emailservice-sleep
 # docker push meghnapancholi/online-boutique:emailservice-sleep
 
-# build productcatalogservice
-docker build -t productcatalogservice -f src/productcatalogservice/Dockerfile src/productcatalogservice
-PRODUCTCATALOGSERVICE_IMAGE_ID=$(docker images --format="{{.Repository}} {{.ID}}" | grep "^productcatalogservice " | cut -d' ' -f2)
-docker tag $PRODUCTCATALOGSERVICE_IMAGE_ID meghnapancholi/online-boutique:productcatalogservice-sleep
-docker push meghnapancholi/online-boutique:productcatalogservice-sleep
+# # build productcatalogservice
+# docker build -t productcatalogservice -f src/productcatalogservice/Dockerfile src/productcatalogservice
+# PRODUCTCATALOGSERVICE_IMAGE_ID=$(docker images --format="{{.Repository}} {{.ID}}" | grep "^productcatalogservice " | cut -d' ' -f2)
+# docker tag $PRODUCTCATALOGSERVICE_IMAGE_ID meghnapancholi/online-boutique:productcatalogservice-sleep
+# docker push meghnapancholi/online-boutique:productcatalogservice-sleep
+
+# # build paymentservice
+# docker build -t paymentservice -f src/paymentservice/Dockerfile src/paymentservice
+# PAYMENTSERVICE_IMAGE_ID=$(docker images --format="{{.Repository}} {{.ID}}" | grep "^paymentservice " | cut -d' ' -f2)
+# docker tag $PAYMENTSERVICE_IMAGE_ID meghnapancholi/online-boutique:paymentservice-sleep
+# docker push meghnapancholi/online-boutique:paymentservice-sleep
+
+# # build recommendationservice
+# docker build -t recommendationservice -f src/recommendationservice/Dockerfile src/recommendationservice
+# RECOMMENDATIONSERVICE_IMAGE_ID=$(docker images --format="{{.Repository}} {{.ID}}" | grep "^recommendationservice " | cut -d' ' -f2)
+# docker tag $RECOMMENDATIONSERVICE_IMAGE_ID meghnapancholi/online-boutique:recommendationservice-sleep
+# docker push meghnapancholi/online-boutique:recommendationservice-sleep
+
 
 
 

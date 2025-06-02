@@ -100,7 +100,7 @@ func main() {
 		srv = grpc.NewServer()
 	}
 	svc := &server{
-		quotes:    initQuotes(),
+		quotes:    make(map[string]float64),
 		quotesMux: &sync.RWMutex{},
 		extraLatency: extraLatency,
 	}

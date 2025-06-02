@@ -38,6 +38,16 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExport
 from logger import getJSONLogger
 logger = getJSONLogger('recommendationservice-server')
 
+def parseLatency(latencyStr):
+    if not latencyStr:
+        return 0
+    import re
+    match = re.match(r'^(\d+)(ms|s)$', latencyStr)
+    if not match:
+        return 0
+    value, unit = match.groups()
+    return int(value) * 1000 if unit == 's' else int(value)
+
 def initStackdriverProfiling():
   project_id = None
   try:
@@ -64,6 +74,10 @@ def initStackdriverProfiling():
   return
 
 class RecommendationService(demo_pb2_grpc.RecommendationServiceServicer):
+    def __init__(self):
+        self.extraLatency = parseLatency(os.environ.get('EXTRA_LATENCY', ''))
+        logger.info(f"Extra latency set to {self.extraLatency}ms")
+
     def ListRecommendations(self, request, context):
         max_responses = 5
         # fetch list of products from product catalog stub
@@ -80,6 +94,11 @@ class RecommendationService(demo_pb2_grpc.RecommendationServiceServicer):
         # build and return response
         response = demo_pb2.ListRecommendationsResponse()
         response.product_ids.extend(prod_list)
+        
+        # Add extra latency if configured
+        if self.extraLatency > 0:
+            time.sleep(self.extraLatency / 1000)  # Convert ms to seconds
+            
         return response
 
     def Check(self, request, context):
