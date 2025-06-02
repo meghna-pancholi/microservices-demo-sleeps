@@ -110,8 +110,8 @@ spec:
         env:
         - name: FRONTEND_ADDR
           value: "{{ .Values.frontend.name }}:80"
-        - name: USERS
-          value: "10"
+        - name: USERS          
+          value: "{{ .Values.loadGenerator.users }}"
         - name: RATE
           value: "1"
         resources:
