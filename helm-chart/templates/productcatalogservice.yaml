@@ -91,6 +91,10 @@ spec:
         {{- end }}
         - name: EXTRA_LATENCY
           value: {{ .Values.productCatalogService.extraLatency }}
+        {{- if .Values.productCatalogService.useBusySpin }}
+        - name: USE_BUSY_SPIN
+          value: "1"
+        {{- end }}
         readinessProbe:
           grpc:
             port: 3550

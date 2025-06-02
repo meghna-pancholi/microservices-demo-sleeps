@@ -44,6 +44,7 @@ var (
 	catalogMutex *sync.Mutex
 	log          *logrus.Logger
 	extraLatency time.Duration
+	useBusySpin  bool
 
 	port = "3550"
 
@@ -93,6 +94,15 @@ func main() {
 		log.Infof("extra latency enabled (duration: %v)", extraLatency)
 	} else {
 		extraLatency = time.Duration(0)
+	}
+
+	// set latency type
+	if os.Getenv("USE_BUSY_SPIN") == "1" {
+		useBusySpin = true
+		log.Info("using busy spin for extra latency")
+	} else {
+		useBusySpin = false
+		log.Info("using sleep for extra latency")
 	}
 
 	sigs := make(chan os.Signal, 1)

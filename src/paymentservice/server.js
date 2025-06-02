@@ -24,6 +24,13 @@ class HipsterShopServer {
   constructor(protoRoot, port = HipsterShopServer.PORT) {
     this.port = port;
 
+    // set injected latency
+    this.extraLatency = 0;
+    if (process.env.EXTRA_LATENCY) {
+      this.extraLatency = parseInt(process.env.EXTRA_LATENCY);
+      logger.info(`extra latency enabled (duration: ${this.extraLatency}ms)`);
+    }
+
     this.packages = {
       hipsterShop: this.loadProto(path.join(protoRoot, 'demo.proto')),
       health: this.loadProto(path.join(protoRoot, 'grpc/health/v1/health.proto'))
@@ -41,8 +48,17 @@ class HipsterShopServer {
   static ChargeServiceHandler(call, callback) {
     try {
       logger.info(`PaymentService#Charge invoked with request ${JSON.stringify(call.request)}`);
-      const response = charge(call.request);
-      callback(null, response);
+
+      // Add extra latency if configured
+      if (this.extraLatency > 0) {
+        setTimeout(() => {
+          const response = charge(call.request);
+          callback(null, response);
+        }, this.extraLatency);
+      } else {
+        const response = charge(call.request);
+        callback(null, response);
+      }
     } catch (err) {
       console.warn(err);
       callback(err);
@@ -55,7 +71,7 @@ class HipsterShopServer {
 
 
   listen() {
-    const server = this.server 
+    const server = this.server
     const port = this.port
     server.bindAsync(
       `[::]:${port}`,

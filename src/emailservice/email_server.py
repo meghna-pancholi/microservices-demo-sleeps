@@ -62,6 +62,15 @@ class EmailService(BaseEmailService):
     raise Exception('cloud mail client not implemented')
     super().__init__()
 
+    # Read extra latency from environment variable
+    self.extra_latency = 0
+    extra_latency_str = os.getenv('EXTRA_LATENCY')
+    if extra_latency_str:
+      try:
+        self.extra_latency = int(parse_duration(extra_latency_str).total_seconds() * 1000)
+      except Exception as e:
+        logger.warning(f"Failed to parse EXTRA_LATENCY: {e}")
+
   @staticmethod
   def send_email(client, email_address, content):
     response = client.send_message(
@@ -83,6 +92,11 @@ class EmailService(BaseEmailService):
     logger.info("Message sent: {}".format(response.rfc822_message_id))
 
   def SendOrderConfirmation(self, request, context):
+    # Add extra latency if configured
+    if self.extra_latency > 0:
+      time.sleep(self.extra_latency / 1000)  # Convert ms to seconds
+      
+    logger.info(f"Received order confirmation request for order {request.order.order_id}")
     email = request.email
     order = request.order
 

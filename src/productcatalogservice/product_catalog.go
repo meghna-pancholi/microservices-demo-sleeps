@@ -39,13 +39,12 @@ func (p *productCatalog) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Hea
 }
 
 func (p *productCatalog) ListProducts(context.Context, *pb.Empty) (*pb.ListProductsResponse, error) {
-	time.Sleep(extraLatency)
-
+	applyExtraLatency()
 	return &pb.ListProductsResponse{Products: p.parseCatalog()}, nil
 }
 
 func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductRequest) (*pb.Product, error) {
-	time.Sleep(extraLatency)
+	applyExtraLatency()
 
 	var found *pb.Product
 	for i := 0; i < len(p.parseCatalog()); i++ {
@@ -61,7 +60,7 @@ func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductReque
 }
 
 func (p *productCatalog) SearchProducts(ctx context.Context, req *pb.SearchProductsRequest) (*pb.SearchProductsResponse, error) {
-	time.Sleep(extraLatency)
+	applyExtraLatency()
 
 	var ps []*pb.Product
 	for _, product := range p.parseCatalog() {
@@ -83,4 +82,20 @@ func (p *productCatalog) parseCatalog() []*pb.Product {
 	}
 
 	return p.catalog.Products
+}
+
+// applyExtraLatency applies the configured extra latency using either sleep or busy spin
+func applyExtraLatency() {
+	if extraLatency == 0 {
+		return
+	}
+
+	if useBusySpin {
+		start := time.Now()
+		for time.Since(start) < extraLatency {
+			// Busy spin - do nothing but keep CPU busy
+		}
+	} else {
+		time.Sleep(extraLatency)
+	}
 }
