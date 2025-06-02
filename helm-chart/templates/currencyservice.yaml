@@ -69,7 +69,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: meghnapancholi/online-boutique:currencyservice-sleep2
+        image: {{ .Values.currencyService.image.repository }}:{{ .Values.currencyService.image.tag }}
         ports:
         - name: grpc
           containerPort: 7000

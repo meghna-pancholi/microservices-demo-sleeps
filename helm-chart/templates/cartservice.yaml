@@ -73,7 +73,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: meghnapancholi/online-boutique:cartservice-sleep3
+        image: {{ .Values.cartService.image.repository }}:{{ .Values.cartService.image.tag }}
         ports:
         - containerPort: 7070
         env:

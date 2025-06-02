@@ -68,7 +68,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: meghnapancholi/online-boutique:checkoutservice-sleep
+        image: {{ .Values.checkoutService.image.repository }}:{{ .Values.checkoutService.image.tag }}
         ports:
         - containerPort: 5050
         readinessProbe:
