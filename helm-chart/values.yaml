@@ -205,6 +205,8 @@ productCatalogService:
     tag: productcatalogservice-sleep
   # Specifies an extra latency to any request on productcatalogservice, by default no extra latency.
   extraLatency: "0ms"
+  # Specifies whether to use busy spin instead of sleep for extra latency
+  useBusySpin: false
   resources:
     requests:
       cpu: 100m

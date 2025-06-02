@@ -25,11 +25,11 @@
 # docker tag $FRONTEND_IMAGE_ID meghnapancholi/online-boutique:frontend-sleep
 # docker push meghnapancholi/online-boutique:frontend-sleep
 
-# build adservice
-docker build -t adservice -f src/adservice/Dockerfile src/adservice
-ADSERVICE_IMAGE_ID=$(docker images --format="{{.Repository}} {{.ID}}" | grep "^adservice " | cut -d' ' -f2)
-docker tag $ADSERVICE_IMAGE_ID meghnapancholi/online-boutique:adservice-sleep
-docker push meghnapancholi/online-boutique:adservice-sleep
+# # build adservice
+# docker build -t adservice -f src/adservice/Dockerfile src/adservice
+# ADSERVICE_IMAGE_ID=$(docker images --format="{{.Repository}} {{.ID}}" | grep "^adservice " | cut -d' ' -f2)
+# docker tag $ADSERVICE_IMAGE_ID meghnapancholi/online-boutique:adservice-sleep
+# docker push meghnapancholi/online-boutique:adservice-sleep
 
 # # build shippingservice
 # docker build -t shippingservice -f src/shippingservice/Dockerfile src/shippingservice
@@ -42,4 +42,12 @@ docker push meghnapancholi/online-boutique:adservice-sleep
 # EMAILSERVICE_IMAGE_ID=$(docker images --format="{{.Repository}} {{.ID}}" | grep "^emailservice " | cut -d' ' -f2)
 # docker tag $EMAILSERVICE_IMAGE_ID meghnapancholi/online-boutique:emailservice-sleep
 # docker push meghnapancholi/online-boutique:emailservice-sleep
+
+# build productcatalogservice
+docker build -t productcatalogservice -f src/productcatalogservice/Dockerfile src/productcatalogservice
+PRODUCTCATALOGSERVICE_IMAGE_ID=$(docker images --format="{{.Repository}} {{.ID}}" | grep "^productcatalogservice " | cut -d' ' -f2)
+docker tag $PRODUCTCATALOGSERVICE_IMAGE_ID meghnapancholi/online-boutique:productcatalogservice-sleep
+docker push meghnapancholi/online-boutique:productcatalogservice-sleep
+
+
 
