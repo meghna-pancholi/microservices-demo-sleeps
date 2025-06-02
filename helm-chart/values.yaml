@@ -17,7 +17,7 @@
 # Declare variables to be passed into your templates.
 
 images:
-  repository: us-central1-docker.pkg.dev/google-samples/microservices-demo
+  repository: meghnapancholi/online-boutique
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
@@ -62,6 +62,11 @@ securityContext:
 adService:
   create: true
   name: adservice
+  image:
+    repository: meghnapancholi/online-boutique
+    tag: adservice-sleep
+  # Specifies an extra latency to any request on adservice, by default no extra latency.
+  extraLatency: "0ms"
   resources:
     requests:
       cpu: 200m
@@ -73,6 +78,9 @@ adService:
 cartService:
   create: true
   name: cartservice
+  image:
+    repository: meghnapancholi/online-boutique
+    tag: cartservice-sleep
   # Specifies an extra latency to any request on cartservice, by default no extra latency.
   extraLatency: "50ms"
   resources:
@@ -86,6 +94,9 @@ cartService:
 checkoutService:
   create: true
   name: checkoutservice
+  image:
+    repository: meghnapancholi/online-boutique
+    tag: checkoutservice-sleep
   # Specifies an extra latency to any request on checkoutservice, by default no extra latency.
   extraLatency: "50ms"
   resources:
@@ -99,6 +110,9 @@ checkoutService:
 currencyService:
   create: true
   name: currencyservice
+  image:
+    repository: meghnapancholi/online-boutique
+    tag: currencyservice-sleep
   # Specifies an extra latency to any request on currencyservice, by default no extra latency.
   extraLatency: "100ms"
   resources:
@@ -112,6 +126,11 @@ currencyService:
 emailService:
   create: true
   name: emailservice
+  image:
+    repository: meghnapancholi/online-boutique
+    tag: emailservice-sleep
+  # Specifies an extra latency to any request on emailservice, by default no extra latency.
+  extraLatency: "0ms"
   resources:
     requests:
       cpu: 100m
@@ -123,11 +142,16 @@ emailService:
 frontend:
   create: true
   name: frontend
+  image:
+    repository: meghnapancholi/online-boutique
+    tag: frontend-sleep
   externalService: true
   cymbalBranding: false
   # One of: local, gcp, aws, azure, onprem, alibaba. When not set, defaults to "local" unless running in GKE, otherwise auto-sets to gcp.
   platform: local
   singleSharedSession: false
+  # Specifies an extra latency to any request on frontend, by default no extra latency.
+  extraLatency: "0ms"
   virtualService:
     create: false
     hosts:
@@ -160,6 +184,11 @@ loadGenerator:
 paymentService:
   create: true
   name: paymentservice
+  image:
+    repository: meghnapancholi/online-boutique
+    tag: paymentservice-sleep
+  # Specifies an extra latency to any request on paymentservice, by default no extra latency.
+  extraLatency: "0ms"
   resources:
     requests:
       cpu: 100m
@@ -171,6 +200,9 @@ paymentService:
 productCatalogService:
   create: true
   name: productcatalogservice
+  image:
+    repository: meghnapancholi/online-boutique
+    tag: productcatalogservice-sleep
   # Specifies an extra latency to any request on productcatalogservice, by default no extra latency.
   extraLatency: "0ms"
   resources:
@@ -184,6 +216,9 @@ productCatalogService:
 recommendationService:
   create: true
   name: recommendationservice
+  image:
+    repository: meghnapancholi/online-boutique
+    tag: recommendationservice-sleep
   resources:
     requests:
       cpu: 100m
@@ -195,6 +230,11 @@ recommendationService:
 shippingService:
   create: true
   name: shippingservice
+  image:
+    repository: meghnapancholi/online-boutique
+    tag: shippingservice-sleep
+  # Specifies an extra latency to any request on shippingservice, by default no extra latency.
+  extraLatency: "0ms"
   resources:
     requests:
       cpu: 100m

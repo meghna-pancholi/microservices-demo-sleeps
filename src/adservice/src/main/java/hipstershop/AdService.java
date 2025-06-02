@@ -29,6 +29,7 @@ import io.grpc.health.v1.HealthCheckResponse.ServingStatus;
 import io.grpc.services.*;
 import io.grpc.stub.StreamObserver;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -47,8 +48,23 @@ public final class AdService {
 
   private Server server;
   private HealthStatusManager healthMgr;
+  private final long extraLatency;
 
   private static final AdService service = new AdService();
+
+  public AdService() {
+    // Read extra latency from environment variable
+    String extraLatencyStr = System.getenv("EXTRA_LATENCY");
+    long extraLatency = 0;
+    if (extraLatencyStr != null && !extraLatencyStr.isEmpty()) {
+      try {
+        extraLatency = Duration.parse(extraLatencyStr).toMillis();
+      } catch (Exception e) {
+        logger.warn("Failed to parse EXTRA_LATENCY: " + e.getMessage());
+      }
+    }
+    this.extraLatency = extraLatency;
+  }
 
   private void start() throws IOException {
     int port = Integer.parseInt(System.getenv().getOrDefault("PORT", "9555"));
@@ -93,6 +109,14 @@ public final class AdService {
     @Override
     public void getAds(AdRequest req, StreamObserver<AdResponse> responseObserver) {
       AdService service = AdService.getInstance();
+      // Add extra latency if configured
+      if (service.extraLatency > 0) {
+        try {
+          Thread.sleep(service.extraLatency);
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+        }
+      }
       try {
         List<Ad> allAds = new ArrayList<>();
         logger.info("received ad request (context_words=" + req.getContextKeysList() + ")");

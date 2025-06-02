@@ -85,6 +85,8 @@ type frontendServer struct {
 	collectorConn *grpc.ClientConn
 
 	shoppingAssistantSvcAddr string
+
+	extraLatency time.Duration
 }
 
 func main() {
@@ -108,6 +110,18 @@ func main() {
 			propagation.TraceContext{}, propagation.Baggage{}))
 
 	baseUrl = os.Getenv("BASE_URL")
+
+	// set injected latency
+	if s := os.Getenv("EXTRA_LATENCY"); s != "" {
+		v, err := time.ParseDuration(s)
+		if err != nil {
+			log.Fatalf("failed to parse EXTRA_LATENCY (%s) as time.Duration: %+v", v, err)
+		}
+		svc.extraLatency = v
+		log.Infof("extra latency enabled (duration: %v)", svc.extraLatency)
+	} else {
+		svc.extraLatency = time.Duration(0)
+	}
 
 	if os.Getenv("ENABLE_TRACING") == "1" {
 		log.Info("Tracing enabled.")

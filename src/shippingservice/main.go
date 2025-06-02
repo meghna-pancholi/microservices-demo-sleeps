@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"sync"
 	"time"
 
 	"cloud.google.com/go/profiler"
@@ -74,6 +75,17 @@ func main() {
 	}
 	port = fmt.Sprintf(":%s", port)
 
+	// Read extra latency from environment variable
+	extraLatency := time.Duration(0)
+	if os.Getenv("EXTRA_LATENCY") != "" {
+		latency, err := time.ParseDuration(os.Getenv("EXTRA_LATENCY"))
+		if err != nil {
+			log.Printf("Failed to parse EXTRA_LATENCY: %v", err)
+		} else {
+			extraLatency = latency
+		}
+	}
+
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -87,7 +99,11 @@ func main() {
 		log.Info("Stats disabled.")
 		srv = grpc.NewServer()
 	}
-	svc := &server{}
+	svc := &server{
+		quotes:    initQuotes(),
+		quotesMux: &sync.RWMutex{},
+		extraLatency: extraLatency,
+	}
 	pb.RegisterShippingServiceServer(srv, svc)
 	healthpb.RegisterHealthServer(srv, svc)
 	log.Infof("Shipping Service listening on port %s", port)
@@ -102,6 +118,9 @@ func main() {
 // server controls RPC service responses.
 type server struct {
 	pb.UnimplementedShippingServiceServer
+	quotes    map[string]float64
+	quotesMux *sync.RWMutex
+	extraLatency time.Duration
 }
 
 // Check is for health checking.
@@ -115,6 +134,11 @@ func (s *server) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Health_Watc
 
 // GetQuote produces a shipping quote (cost) in USD.
 func (s *server) GetQuote(ctx context.Context, in *pb.GetQuoteRequest) (*pb.GetQuoteResponse, error) {
+	// Add extra latency if configured
+	if s.extraLatency > 0 {
+		time.Sleep(s.extraLatency)
+	}
+	
 	log.Info("[GetQuote] received request")
 	defer log.Info("[GetQuote] completed request")
 
@@ -128,12 +152,16 @@ func (s *server) GetQuote(ctx context.Context, in *pb.GetQuoteRequest) (*pb.GetQ
 			Units:        int64(quote.Dollars),
 			Nanos:        int32(quote.Cents * 10000000)},
 	}, nil
-
 }
 
 // ShipOrder mocks that the requested items will be shipped.
 // It supplies a tracking ID for notional lookup of shipment delivery status.
 func (s *server) ShipOrder(ctx context.Context, in *pb.ShipOrderRequest) (*pb.ShipOrderResponse, error) {
+	// Add extra latency if configured
+	if s.extraLatency > 0 {
+		time.Sleep(s.extraLatency)
+	}
+	
 	log.Info("[ShipOrder] received request")
 	defer log.Info("[ShipOrder] completed request")
 	// 1. Create a Tracking ID
