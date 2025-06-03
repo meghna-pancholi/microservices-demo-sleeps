@@ -89,8 +89,10 @@ spec:
         - name: DISABLE_PROFILER
           value: "1"
         {{- end }}
+        {{- if .Values.productCatalogService.extraLatency }}
         - name: EXTRA_LATENCY
-          value: {{ .Values.productCatalogService.extraLatency }}
+          value: {{ .Values.productCatalogService.extraLatency | quote }}
+        {{- end }}
         {{- if .Values.productCatalogService.useBusySpin }}
         - name: USE_BUSY_SPIN
           value: "1"

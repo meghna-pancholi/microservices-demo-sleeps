@@ -124,6 +124,14 @@ spec:
           - name: ENABLE_PROFILER
             value: "1"
           {{- end }}
+          {{- if not .Values.googleCloudOperations.profiler }}
+          - name: DISABLE_PROFILER
+            value: "1"
+          {{- end }}
+          {{- if .Values.frontend.extraLatency }}
+          - name: EXTRA_LATENCY
+            value: {{ .Values.frontend.extraLatency | quote }}
+          {{- end }}
           - name: CYMBAL_BRANDING
             value: {{ .Values.frontend.cymbalBranding | quote }}
           - name: ENABLE_ASSISTANT

@@ -78,6 +78,10 @@ spec:
         - name: DISABLE_PROFILER
           value: "1"
         {{- end }}
+        {{- if .Values.shippingService.extraLatency }}
+        - name: EXTRA_LATENCY
+          value: {{ .Values.shippingService.extraLatency | quote }}
+        {{- end }}
         readinessProbe:
           periodSeconds: 5
           grpc:
