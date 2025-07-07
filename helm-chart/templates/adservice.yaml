@@ -75,6 +75,14 @@ spec:
         env:
         - name: PORT
           value: "9555"
+        {{- if not .Values.googleCloudOperations.profiler }}
+        - name: DISABLE_PROFILER
+          value: "1"
+        {{- end }}
+        {{- if .Values.adService.extraLatency }}
+        - name: EXTRA_LATENCY
+          value: {{ .Values.adService.extraLatency | quote }}
+        {{- end }}
         resources:
           {{- toYaml .Values.adService.resources | nindent 10 }}
         readinessProbe:

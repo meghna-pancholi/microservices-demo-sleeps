@@ -89,6 +89,10 @@ spec:
         - name: DISABLE_PROFILER
           value: "1"
         {{- end }}
+        {{- if .Values.emailService.extraLatency }}
+        - name: EXTRA_LATENCY
+          value: {{ .Values.emailService.extraLatency | quote }}
+        {{- end }}
         readinessProbe:
           periodSeconds: 5
           grpc:

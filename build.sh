@@ -31,11 +31,11 @@
 # docker tag $ADSERVICE_IMAGE_ID meghnapancholi/online-boutique:adservice-sleep
 # docker push meghnapancholi/online-boutique:adservice-sleep
 
-# build shippingservice
-docker build -t shippingservice -f src/shippingservice/Dockerfile src/shippingservice
-SHIPPINGSERVICE_IMAGE_ID=$(docker images --format="{{.Repository}} {{.ID}}" | grep "^shippingservice " | cut -d' ' -f2)
-docker tag $SHIPPINGSERVICE_IMAGE_ID meghnapancholi/online-boutique:shippingservice-sleep
-docker push meghnapancholi/online-boutique:shippingservice-sleep
+# # build shippingservice
+# docker build -t shippingservice -f src/shippingservice/Dockerfile src/shippingservice
+# SHIPPINGSERVICE_IMAGE_ID=$(docker images --format="{{.Repository}} {{.ID}}" | grep "^shippingservice " | cut -d' ' -f2)
+# docker tag $SHIPPINGSERVICE_IMAGE_ID meghnapancholi/online-boutique:shippingservice-sleep
+# docker push meghnapancholi/online-boutique:shippingservice-sleep
 
 # #build emailservice
 # docker build -t emailservice -f src/emailservice/Dockerfile src/emailservice
@@ -61,6 +61,17 @@ docker push meghnapancholi/online-boutique:shippingservice-sleep
 # docker tag $RECOMMENDATIONSERVICE_IMAGE_ID meghnapancholi/online-boutique:recommendationservice-sleep
 # docker push meghnapancholi/online-boutique:recommendationservice-sleep
 
+# # build loadgenerator
+# docker build -t loadgenerator -f src/loadgenerator/Dockerfile src/loadgenerator
+# LOADGENERATOR_IMAGE_ID=$(docker images --format="{{.Repository}} {{.ID}}" | grep "^loadgenerator " | cut -d' ' -f2)
+# docker tag $LOADGENERATOR_IMAGE_ID meghnapancholi/online-boutique:loadgenerator
+# docker push meghnapancholi/online-boutique:loadgenerator
+
+# build loadgenerator
+docker build -t loadgenerator-checkout-only -f src/loadgenerator/Dockerfile src/loadgenerator
+LOADGENERATOR_IMAGE_ID=$(docker images --format="{{.Repository}} {{.ID}}" | grep "^loadgenerator-checkout-only " | cut -d' ' -f2)
+docker tag $LOADGENERATOR_IMAGE_ID meghnapancholi/online-boutique:loadgenerator-checkout-only
+docker push meghnapancholi/online-boutique:loadgenerator-checkout-only
 
 
 

@@ -99,6 +99,10 @@ spec:
         - name: DISABLE_PROFILER
           value: "1"
         {{- end }}
+        {{- if .Values.recommendationService.extraLatency }}
+        - name: EXTRA_LATENCY
+          value: {{ .Values.recommendationService.extraLatency | quote }}
+        {{- end }}
         resources:
           {{- toYaml .Values.recommendationService.resources | nindent 10 }}
 ---
