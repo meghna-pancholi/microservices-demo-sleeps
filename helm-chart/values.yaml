@@ -67,6 +67,10 @@ adService:
     tag: adservice-sleep
   # Specifies an extra latency to any request on adservice, by default no extra latency.
   extraLatency: "0ms"
+  virtualService:
+    create: true
+    hosts:
+    - "adservice.local"
   resources:
     requests:
       cpu: 200m
@@ -83,6 +87,12 @@ cartService:
     tag: cartservice-sleep
   # Specifies an extra latency to any request on cartservice, by default no extra latency.
   extraLatency: "0ms"
+  # Number of replicas for cartservice
+  replicas: 2
+  virtualService:
+    create: true
+    hosts:
+    - "cartservice.local"
   resources:
     requests:
       cpu: 200m
@@ -99,6 +109,10 @@ checkoutService:
     tag: checkoutservice-sleep
   # Specifies an extra latency to any request on checkoutservice, by default no extra latency.
   extraLatency: "0ms"
+  virtualService:
+    create: true
+    hosts:
+    - "checkoutservice.local"
   resources:
     requests:
       cpu: 100m
@@ -115,6 +129,10 @@ currencyService:
     tag: currencyservice-sleep
   # Specifies an extra latency to any request on currencyservice, by default no extra latency.
   extraLatency: "0ms"
+  virtualService:
+    create: true
+    hosts:
+    - "currencyservice.local"
   resources:
     requests:
       cpu: 100m
@@ -131,6 +149,10 @@ emailService:
     tag: emailservice-sleep
   # Specifies an extra latency to any request on emailservice, by default no extra latency.
   extraLatency: "0ms"
+  virtualService:
+    create: true
+    hosts:
+    - "emailservice.local"
   resources:
     requests:
       cpu: 100m
@@ -194,6 +216,10 @@ paymentService:
     tag: paymentservice-sleep
   # Specifies an extra latency to any request on paymentservice, by default no extra latency.
   extraLatency: "0ms"
+  virtualService:
+    create: true
+    hosts:
+    - "paymentservice.local"
   resources:
     requests:
       cpu: 100m
@@ -212,6 +238,10 @@ productCatalogService:
   extraLatency: "0ms"
   # Specifies whether to use busy spin instead of sleep for extra latency
   useBusySpin: false
+  virtualService:
+    create: true
+    hosts:
+    - "productcatalogservice.local"
   resources:
     requests:
       cpu: 100m
@@ -226,6 +256,10 @@ recommendationService:
   image:
     repository: meghnapancholi/online-boutique
     tag: recommendationservice-sleep
+  virtualService:
+    create: true
+    hosts:
+    - "recommendationservice.local"
   resources:
     requests:
       cpu: 100m
@@ -242,6 +276,10 @@ shippingService:
     tag: shippingservice-sleep
   # Specifies an extra latency to any request on shippingservice, by default no extra latency.
   extraLatency: "0ms"
+  virtualService:
+    create: true
+    hosts:
+    - "shippingservice.local"
   resources:
     requests:
       cpu: 100m
