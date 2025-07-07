@@ -85,10 +85,14 @@ cartService:
   image:
     repository: meghnapancholi/online-boutique
     tag: cartservice-sleep
-  # Specifies an extra latency to any request on cartservice, by default no extra latency.
-  extraLatency: "0ms"
   # Number of replicas for cartservice
   replicas: 2
+  # Extra latency configuration for each replica
+  replicaConfigs:
+    - name: cartservice-replica-1
+      extraLatency: "0ms"
+    - name: cartservice-replica-2
+      extraLatency: "10ms"
   virtualService:
     create: true
     hosts:

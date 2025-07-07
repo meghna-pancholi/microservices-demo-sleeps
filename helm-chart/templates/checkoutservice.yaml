@@ -207,3 +207,49 @@ spec:
         - "5050"
 {{- end }}
 {{- end }}
+{{- /* EnvoyFilter for request hedging on cartservice calls from checkoutservice */ -}}
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: {{ .Values.checkoutService.name }}-cartservice-hedging
+  namespace: {{ .Release.Namespace }}
+spec:
+  workloadSelector:
+    labels:
+      app: {{ .Values.checkoutService.name }}
+  configPatches:
+  - applyTo: HTTP_ROUTE
+    match:
+      context: SIDECAR_OUTBOUND
+      routeConfiguration:
+        vhost:
+          route:
+            name: "{{ .Values.cartService.name }}"
+    patch:
+      operation: MERGE
+      value:
+        hedge_policy:
+          initial_requests: 1
+          additional_request_chance:
+            numerator: 1
+            denominator: HUNDRED
+          hedge_on_per_try_timeout: true
+          max_requests: 2
+  - applyTo: HTTP_ROUTE
+    match:
+      context: SIDECAR_OUTBOUND
+      routeConfiguration:
+        vhost:
+          route:
+            name: "{{ .Values.cartService.name }}"
+    patch:
+      operation: MERGE
+      value:
+        retry_policy:
+          retry_on: connect-failure,refused-stream,unavailable,cancelled,retriable-status-codes
+          num_retries: 1
+          per_try_timeout: 1s
+          retry_host_predicate:
+          - name: envoy.retry_host_predicates.previous_hosts
+          host_selection_retry_max_attempts: 3

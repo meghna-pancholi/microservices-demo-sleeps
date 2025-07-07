@@ -25,45 +25,51 @@ metadata:
   {{- end }}
 ---
 {{- end }}
+
+{{- /* Create separate deployments for each replica */ -}}
+{{- range $index, $replica := .Values.cartService.replicaConfigs }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.cartService.name }}
-  namespace: {{ .Release.Namespace }}
+  name: {{ $.Values.cartService.name }}-{{ $replica.name }}
+  namespace: {{ $.Release.Namespace }}
   labels:
-    app: {{ .Values.cartService.name }}
+    app: {{ $.Values.cartService.name }}
+    replica: {{ $replica.name }}
 spec:
-  replicas: {{ .Values.cartService.replicas | default 1 }}
+  replicas: 1
   selector:
     matchLabels:
-      app: {{ .Values.cartService.name }}
+      app: {{ $.Values.cartService.name }}
+      replica: {{ $replica.name }}
   template:
     metadata:
-      {{- if .Values.cartDatabase.externalRedisTlsOrigination.enable }}
+      {{- if $.Values.cartDatabase.externalRedisTlsOrigination.enable }}
       annotations:
-        sidecar.istio.io/userVolumeMount: '[{"name": "{{ .Values.cartDatabase.externalRedisTlsOrigination.name }}", "mountPath": "/etc/certs", "readonly": true}]'
-        sidecar.istio.io/userVolume: '[{"name": "{{ .Values.cartDatabase.externalRedisTlsOrigination.name }}", "secret": {"secretName": "{{ .Values.cartDatabase.externalRedisTlsOrigination.name }}"}}]'
+        sidecar.istio.io/userVolumeMount: '[{"name": "{{ $.Values.cartDatabase.externalRedisTlsOrigination.name }}", "mountPath": "/etc/certs", "readonly": true}]'
+        sidecar.istio.io/userVolume: '[{"name": "{{ $.Values.cartDatabase.externalRedisTlsOrigination.name }}", "secret": {"secretName": "{{ $.Values.cartDatabase.externalRedisTlsOrigination.name }}"}}]'
         proxy.istio.io/config: '{"holdApplicationUntilProxyStarts": true}'
       {{- end }}
       labels:
-        app: {{ .Values.cartService.name }}
+        app: {{ $.Values.cartService.name }}
+        replica: {{ $replica.name }}
     spec:
-      {{- if .Values.serviceAccounts.create }}
-      serviceAccountName: {{ .Values.cartService.name }}
+      {{- if $.Values.serviceAccounts.create }}
+      serviceAccountName: {{ $.Values.cartService.name }}
       {{- else }}
       serviceAccountName: default
       {{- end }}
       terminationGracePeriodSeconds: 5
-      {{- if .Values.securityContext.enable }}
+      {{- if $.Values.securityContext.enable }}
       securityContext:
         fsGroup: 1000
         runAsGroup: 1000
         runAsNonRoot: true
         runAsUser: 1000
       {{- end }}
-        {{- if .Values.seccompProfile.enable }}
+        {{- if $.Values.seccompProfile.enable }}
         seccompProfile:
-          type: {{ .Values.seccompProfile.type }}
+          type: {{ $.Values.seccompProfile.type }}
         {{- end }}
       containers:
       - name: server
@@ -74,22 +80,22 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: {{ .Values.cartService.image.repository }}:{{ .Values.cartService.image.tag }}
+        image: {{ $.Values.cartService.image.repository }}:{{ $.Values.cartService.image.tag }}
         ports:
         - containerPort: 7070
         env:
-        {{- if eq .Values.cartDatabase.type "spanner" }}
+        {{- if eq $.Values.cartDatabase.type "spanner" }}
         - name: SPANNER_CONNECTION_STRING
         {{- else }}
         - name: REDIS_ADDR
         {{- end }}
-          value: {{ .Values.cartDatabase.connectionString | quote }}
-        {{- if .Values.cartService.extraLatency }}
+          value: {{ $.Values.cartDatabase.connectionString | quote }}
+        {{- if $replica.extraLatency }}
         - name: EXTRA_LATENCY
-          value: {{ .Values.cartService.extraLatency | quote }}
+          value: {{ $replica.extraLatency | quote }}
         {{- end }}
         resources:
-          {{- toYaml .Values.cartService.resources | nindent 10 }}
+          {{- toYaml $.Values.cartService.resources | nindent 10 }}
         readinessProbe:
           initialDelaySeconds: 15
           grpc:
@@ -100,6 +106,8 @@ spec:
           grpc:
             port: 7070
 ---
+{{- end }}
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -115,6 +123,7 @@ spec:
   - name: grpc
     port: 7070
     targetPort: 7070
+
 {{- if .Values.networkPolicies.create }}
 ---
 apiVersion: networking.k8s.io/v1
@@ -143,6 +152,7 @@ spec:
   egress:
   - {}
 {{- end }}
+
 {{- if .Values.sidecars.create }}
 ---
 apiVersion: networking.istio.io/v1beta1
@@ -168,6 +178,7 @@ spec:
     - ./{{ .Values.opentelemetryCollector.name }}.{{ .Release.Namespace }}.svc.cluster.local
     {{- end }}
 {{- end }}
+
 {{- if .Values.authorizationPolicies.create }}
 ---
 apiVersion: security.istio.io/v1beta1
@@ -200,6 +211,73 @@ spec:
         ports:
         - "7070"
 {{- end }}
+
+{{- if .Values.cartService.virtualService.create }}
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ .Values.cartService.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  {{- with .Values.cartService.virtualService.hosts }}
+  hosts:
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+  http:
+  - route:
+    - destination:
+        host: {{ .Values.cartService.name }}
+        port:
+          number: 7070
+{{- end }}
+
+{{- /* EnvoyFilter for request hedging on cartservice */ -}}
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: {{ .Values.cartService.name }}-hedging
+  namespace: {{ .Release.Namespace }}
+spec:
+  workloadSelector:
+    labels:
+      app: {{ .Values.frontend.name }}
+  configPatches:
+  - applyTo: HTTP_ROUTE
+    match:
+      context: SIDECAR_OUTBOUND
+      routeConfiguration:
+        vhost:
+          route:
+            name: "{{ .Values.cartService.name }}"
+    patch:
+      operation: MERGE
+      value:
+        hedge_policy:
+          initial_requests: 1
+          additional_request_chance:
+            numerator: 1
+            denominator: HUNDRED
+          hedge_on_per_try_timeout: true
+          max_requests: 2
+  - applyTo: HTTP_ROUTE
+    match:
+      context: SIDECAR_OUTBOUND
+      routeConfiguration:
+        vhost:
+          route:
+            name: "{{ .Values.cartService.name }}"
+    patch:
+      operation: MERGE
+      value:
+        retry_policy:
+          retry_on: connect-failure,refused-stream,unavailable,cancelled,retriable-status-codes
+          num_retries: 1
+          per_try_timeout: 1s
+          retry_host_predicate:
+          - name: envoy.retry_host_predicates.previous_hosts
+          host_selection_retry_max_attempts: 3
 
 {{- if .Values.cartDatabase.inClusterRedis.create }}
 ---
@@ -407,24 +485,4 @@ spec:
     name: tcp-redis
     protocol: TCP
 {{- end }}
-{{- end }}
-
-{{- if .Values.cartService.virtualService.create }}
----
-apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
-metadata:
-  name: {{ .Values.cartService.name }}
-  namespace: {{ .Release.Namespace }}
-spec:
-  {{- with .Values.cartService.virtualService.hosts }}
-  hosts:
-  {{- toYaml . | nindent 2 }}
-  {{- end }}
-  http:
-  - route:
-    - destination:
-        host: {{ .Values.cartService.name }}
-        port:
-          number: 7070
 {{- end }}
