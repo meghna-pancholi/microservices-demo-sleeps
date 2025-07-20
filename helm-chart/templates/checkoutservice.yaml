@@ -206,50 +206,25 @@ spec:
         ports:
         - "5050"
 {{- end }}
-{{- end }}
-{{- /* EnvoyFilter for request hedging on cartservice calls from checkoutservice */ -}}
+{{- /* EnvoyFilter for request hedging is now managed centrally in envoyfilters.yaml */ -}}
+
+{{- if .Values.checkoutService.virtualService.create }}
 ---
 apiVersion: networking.istio.io/v1alpha3
-kind: EnvoyFilter
+kind: VirtualService
 metadata:
-  name: {{ .Values.checkoutService.name }}-cartservice-hedging
+  name: {{ .Values.checkoutService.name }}
   namespace: {{ .Release.Namespace }}
 spec:
-  workloadSelector:
-    labels:
-      app: {{ .Values.checkoutService.name }}
-  configPatches:
-  - applyTo: HTTP_ROUTE
-    match:
-      context: SIDECAR_OUTBOUND
-      routeConfiguration:
-        vhost:
-          route:
-            name: "{{ .Values.cartService.name }}"
-    patch:
-      operation: MERGE
-      value:
-        hedge_policy:
-          initial_requests: 1
-          additional_request_chance:
-            numerator: 1
-            denominator: HUNDRED
-          hedge_on_per_try_timeout: true
-          max_requests: 2
-  - applyTo: HTTP_ROUTE
-    match:
-      context: SIDECAR_OUTBOUND
-      routeConfiguration:
-        vhost:
-          route:
-            name: "{{ .Values.cartService.name }}"
-    patch:
-      operation: MERGE
-      value:
-        retry_policy:
-          retry_on: connect-failure,refused-stream,unavailable,cancelled,retriable-status-codes
-          num_retries: 1
-          per_try_timeout: 1s
-          retry_host_predicate:
-          - name: envoy.retry_host_predicates.previous_hosts
-          host_selection_retry_max_attempts: 3
+  {{- with .Values.checkoutService.virtualService.hosts }}
+  hosts:
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+  http:
+  - route:
+    - destination:
+        host: {{ .Values.checkoutService.name }}
+        port:
+          number: 5050
+{{- end }}
+{{- end }}

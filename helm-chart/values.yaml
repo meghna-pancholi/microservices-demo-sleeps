@@ -59,6 +59,83 @@ seccompProfile:
 securityContext:
   enable: true
 
+# Request hedging configuration for reducing tail latency
+requestHedging:
+  # Enable request hedging globally
+  enabled: true
+  # Default hedging configuration
+  default:
+    initial_requests: 1
+    additional_request_chance:
+      numerator: 1
+      denominator: HUNDRED
+    hedge_on_per_try_timeout: true
+    max_requests: 2
+  # Service-specific hedging configurations
+  services:
+    # Frontend to critical services
+    frontend:
+      productcatalogservice:
+        enabled: true
+        initial_requests: 1
+        additional_request_chance:
+          numerator: 1
+          denominator: HUNDRED
+        hedge_on_per_try_timeout: true
+        max_requests: 2
+      recommendationservice:
+        enabled: true
+        initial_requests: 1
+        additional_request_chance:
+          numerator: 1
+          denominator: HUNDRED
+        hedge_on_per_try_timeout: true
+        max_requests: 2
+      cartservice:
+        enabled: true
+        initial_requests: 1
+        additional_request_chance:
+          numerator: 1
+          denominator: HUNDRED
+        hedge_on_per_try_timeout: true
+        max_requests: 2
+    # Checkout service to its dependencies
+    checkoutservice:
+      cartservice:
+        enabled: true
+        initial_requests: 1
+        additional_request_chance:
+          numerator: 1
+          denominator: HUNDRED
+        hedge_on_per_try_timeout: true
+        max_requests: 2
+      productcatalogservice:
+        enabled: true
+        initial_requests: 1
+        additional_request_chance:
+          numerator: 1
+          denominator: HUNDRED
+        hedge_on_per_try_timeout: true
+        max_requests: 2
+      currencyservice:
+        enabled: true
+        initial_requests: 1
+        additional_request_chance:
+          numerator: 1
+          denominator: HUNDRED
+        hedge_on_per_try_timeout: true
+        max_requests: 2
+    # Recommendation service to product catalog
+    recommendationservice:
+      productcatalogservice:
+        enabled: true
+        initial_requests: 1
+        additional_request_chance:
+          numerator: 1
+          denominator: HUNDRED
+        hedge_on_per_try_timeout: true
+        max_requests: 2
+
 adService:
   create: true
   name: adservice
@@ -92,7 +169,7 @@ cartService:
     - name: cartservice-replica-1
       extraLatency: "0ms"
     - name: cartservice-replica-2
-      extraLatency: "10ms"
+      extraLatency: "1s"
   virtualService:
     create: true
     hosts:
@@ -179,7 +256,7 @@ frontend:
   # Specifies an extra latency to any request on frontend, by default no extra latency.
   extraLatency: "0ms"
   virtualService:
-    create: false
+    create: true
     hosts:
     - "*"
     gateway:

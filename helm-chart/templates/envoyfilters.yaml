@@ -1,0 +1,359 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+{{- if .Values.requestHedging.enabled }}
+{{- /* EnvoyFilter for frontend to productcatalogservice hedging */ -}}
+{{- if .Values.requestHedging.services.frontend.productcatalogservice.enabled }}
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: frontend-productcatalogservice-hedging
+  namespace: {{ .Release.Namespace }}
+spec:
+  workloadSelector:
+    labels:
+      app: {{ .Values.frontend.name }}
+  configPatches:
+  - applyTo: HTTP_ROUTE
+    match:
+      context: SIDECAR_OUTBOUND
+      routeConfiguration:
+        vhost:
+          route:
+            name: "{{ .Values.productCatalogService.name }}"
+    patch:
+      operation: MERGE
+      value:
+        hedge_policy:
+          initial_requests: {{ .Values.requestHedging.services.frontend.productcatalogservice.initial_requests }}
+          additional_request_chance:
+            numerator: {{ .Values.requestHedging.services.frontend.productcatalogservice.additional_request_chance.numerator }}
+            denominator: {{ .Values.requestHedging.services.frontend.productcatalogservice.additional_request_chance.denominator }}
+          hedge_on_per_try_timeout: {{ .Values.requestHedging.services.frontend.productcatalogservice.hedge_on_per_try_timeout }}
+          max_requests: {{ .Values.requestHedging.services.frontend.productcatalogservice.max_requests }}
+  - applyTo: HTTP_ROUTE
+    match:
+      context: SIDECAR_OUTBOUND
+      routeConfiguration:
+        vhost:
+          route:
+            name: "{{ .Values.productCatalogService.name }}"
+    patch:
+      operation: MERGE
+      value:
+        retry_policy:
+          retry_on: connect-failure,refused-stream,unavailable,cancelled,retriable-status-codes
+          num_retries: 1
+          per_try_timeout: 1s
+          retry_host_predicate:
+          - name: envoy.retry_host_predicates.previous_hosts
+          host_selection_retry_max_attempts: 3
+{{- end }}
+
+{{- /* EnvoyFilter for frontend to recommendationservice hedging */ -}}
+{{- if .Values.requestHedging.services.frontend.recommendationservice.enabled }}
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: frontend-recommendationservice-hedging
+  namespace: {{ .Release.Namespace }}
+spec:
+  workloadSelector:
+    labels:
+      app: {{ .Values.frontend.name }}
+  configPatches:
+  - applyTo: HTTP_ROUTE
+    match:
+      context: SIDECAR_OUTBOUND
+      routeConfiguration:
+        vhost:
+          route:
+            name: "{{ .Values.recommendationService.name }}"
+    patch:
+      operation: MERGE
+      value:
+        hedge_policy:
+          initial_requests: {{ .Values.requestHedging.services.frontend.recommendationservice.initial_requests }}
+          additional_request_chance:
+            numerator: {{ .Values.requestHedging.services.frontend.recommendationservice.additional_request_chance.numerator }}
+            denominator: {{ .Values.requestHedging.services.frontend.recommendationservice.additional_request_chance.denominator }}
+          hedge_on_per_try_timeout: {{ .Values.requestHedging.services.frontend.recommendationservice.hedge_on_per_try_timeout }}
+          max_requests: {{ .Values.requestHedging.services.frontend.recommendationservice.max_requests }}
+  - applyTo: HTTP_ROUTE
+    match:
+      context: SIDECAR_OUTBOUND
+      routeConfiguration:
+        vhost:
+          route:
+            name: "{{ .Values.recommendationService.name }}"
+    patch:
+      operation: MERGE
+      value:
+        retry_policy:
+          retry_on: connect-failure,refused-stream,unavailable,cancelled,retriable-status-codes
+          num_retries: 1
+          per_try_timeout: 1s
+          retry_host_predicate:
+          - name: envoy.retry_host_predicates.previous_hosts
+          host_selection_retry_max_attempts: 3
+{{- end }}
+
+{{- /* EnvoyFilter for frontend to cartservice hedging */ -}}
+{{- if .Values.requestHedging.services.frontend.cartservice.enabled }}
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: frontend-cartservice-hedging
+  namespace: {{ .Release.Namespace }}
+spec:
+  workloadSelector:
+    labels:
+      app: {{ .Values.frontend.name }}
+  configPatches:
+  - applyTo: HTTP_ROUTE
+    match:
+      context: SIDECAR_OUTBOUND
+      routeConfiguration:
+        vhost:
+          route:
+            name: "{{ .Values.cartService.name }}"
+    patch:
+      operation: MERGE
+      value:
+        hedge_policy:
+          initial_requests: {{ .Values.requestHedging.services.frontend.cartservice.initial_requests }}
+          additional_request_chance:
+            numerator: {{ .Values.requestHedging.services.frontend.cartservice.additional_request_chance.numerator }}
+            denominator: {{ .Values.requestHedging.services.frontend.cartservice.additional_request_chance.denominator }}
+          hedge_on_per_try_timeout: {{ .Values.requestHedging.services.frontend.cartservice.hedge_on_per_try_timeout }}
+          max_requests: {{ .Values.requestHedging.services.frontend.cartservice.max_requests }}
+  - applyTo: HTTP_ROUTE
+    match:
+      context: SIDECAR_OUTBOUND
+      routeConfiguration:
+        vhost:
+          route:
+            name: "{{ .Values.cartService.name }}"
+    patch:
+      operation: MERGE
+      value:
+        retry_policy:
+          retry_on: connect-failure,refused-stream,unavailable,cancelled,retriable-status-codes
+          num_retries: 1
+          per_try_timeout: 1s
+          retry_host_predicate:
+          - name: envoy.retry_host_predicates.previous_hosts
+          host_selection_retry_max_attempts: 3
+{{- end }}
+
+{{- /* EnvoyFilter for checkoutservice to cartservice hedging */ -}}
+{{- if .Values.requestHedging.services.checkoutservice.cartservice.enabled }}
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: checkoutservice-cartservice-hedging
+  namespace: {{ .Release.Namespace }}
+spec:
+  workloadSelector:
+    labels:
+      app: {{ .Values.checkoutService.name }}
+  configPatches:
+  - applyTo: HTTP_ROUTE
+    match:
+      context: SIDECAR_OUTBOUND
+      routeConfiguration:
+        vhost:
+          route:
+            name: "{{ .Values.cartService.name }}"
+    patch:
+      operation: MERGE
+      value:
+        hedge_policy:
+          initial_requests: {{ .Values.requestHedging.services.checkoutservice.cartservice.initial_requests }}
+          additional_request_chance:
+            numerator: {{ .Values.requestHedging.services.checkoutservice.cartservice.additional_request_chance.numerator }}
+            denominator: {{ .Values.requestHedging.services.checkoutservice.cartservice.additional_request_chance.denominator }}
+          hedge_on_per_try_timeout: {{ .Values.requestHedging.services.checkoutservice.cartservice.hedge_on_per_try_timeout }}
+          max_requests: {{ .Values.requestHedging.services.checkoutservice.cartservice.max_requests }}
+  - applyTo: HTTP_ROUTE
+    match:
+      context: SIDECAR_OUTBOUND
+      routeConfiguration:
+        vhost:
+          route:
+            name: "{{ .Values.cartService.name }}"
+    patch:
+      operation: MERGE
+      value:
+        retry_policy:
+          retry_on: connect-failure,refused-stream,unavailable,cancelled,retriable-status-codes
+          num_retries: 1
+          per_try_timeout: 1s
+          retry_host_predicate:
+          - name: envoy.retry_host_predicates.previous_hosts
+          host_selection_retry_max_attempts: 3
+{{- end }}
+
+{{- /* EnvoyFilter for checkoutservice to productcatalogservice hedging */ -}}
+{{- if .Values.requestHedging.services.checkoutservice.productcatalogservice.enabled }}
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: checkoutservice-productcatalogservice-hedging
+  namespace: {{ .Release.Namespace }}
+spec:
+  workloadSelector:
+    labels:
+      app: {{ .Values.checkoutService.name }}
+  configPatches:
+  - applyTo: HTTP_ROUTE
+    match:
+      context: SIDECAR_OUTBOUND
+      routeConfiguration:
+        vhost:
+          route:
+            name: "{{ .Values.productCatalogService.name }}"
+    patch:
+      operation: MERGE
+      value:
+        hedge_policy:
+          initial_requests: {{ .Values.requestHedging.services.checkoutservice.productcatalogservice.initial_requests }}
+          additional_request_chance:
+            numerator: {{ .Values.requestHedging.services.checkoutservice.productcatalogservice.additional_request_chance.numerator }}
+            denominator: {{ .Values.requestHedging.services.checkoutservice.productcatalogservice.additional_request_chance.denominator }}
+          hedge_on_per_try_timeout: {{ .Values.requestHedging.services.checkoutservice.productcatalogservice.hedge_on_per_try_timeout }}
+          max_requests: {{ .Values.requestHedging.services.checkoutservice.productcatalogservice.max_requests }}
+  - applyTo: HTTP_ROUTE
+    match:
+      context: SIDECAR_OUTBOUND
+      routeConfiguration:
+        vhost:
+          route:
+            name: "{{ .Values.productCatalogService.name }}"
+    patch:
+      operation: MERGE
+      value:
+        retry_policy:
+          retry_on: connect-failure,refused-stream,unavailable,cancelled,retriable-status-codes
+          num_retries: 1
+          per_try_timeout: 1s
+          retry_host_predicate:
+          - name: envoy.retry_host_predicates.previous_hosts
+          host_selection_retry_max_attempts: 3
+{{- end }}
+
+{{- /* EnvoyFilter for checkoutservice to currencyservice hedging */ -}}
+{{- if .Values.requestHedging.services.checkoutservice.currencyservice.enabled }}
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: checkoutservice-currencyservice-hedging
+  namespace: {{ .Release.Namespace }}
+spec:
+  workloadSelector:
+    labels:
+      app: {{ .Values.checkoutService.name }}
+  configPatches:
+  - applyTo: HTTP_ROUTE
+    match:
+      context: SIDECAR_OUTBOUND
+      routeConfiguration:
+        vhost:
+          route:
+            name: "{{ .Values.currencyService.name }}"
+    patch:
+      operation: MERGE
+      value:
+        hedge_policy:
+          initial_requests: {{ .Values.requestHedging.services.checkoutservice.currencyservice.initial_requests }}
+          additional_request_chance:
+            numerator: {{ .Values.requestHedging.services.checkoutservice.currencyservice.additional_request_chance.numerator }}
+            denominator: {{ .Values.requestHedging.services.checkoutservice.currencyservice.additional_request_chance.denominator }}
+          hedge_on_per_try_timeout: {{ .Values.requestHedging.services.checkoutservice.currencyservice.hedge_on_per_try_timeout }}
+          max_requests: {{ .Values.requestHedging.services.checkoutservice.currencyservice.max_requests }}
+  - applyTo: HTTP_ROUTE
+    match:
+      context: SIDECAR_OUTBOUND
+      routeConfiguration:
+        vhost:
+          route:
+            name: "{{ .Values.currencyService.name }}"
+    patch:
+      operation: MERGE
+      value:
+        retry_policy:
+          retry_on: connect-failure,refused-stream,unavailable,cancelled,retriable-status-codes
+          num_retries: 1
+          per_try_timeout: 1s
+          retry_host_predicate:
+          - name: envoy.retry_host_predicates.previous_hosts
+          host_selection_retry_max_attempts: 3
+{{- end }}
+
+{{- /* EnvoyFilter for recommendationservice to productcatalogservice hedging */ -}}
+{{- if .Values.requestHedging.services.recommendationservice.productcatalogservice.enabled }}
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: recommendationservice-productcatalogservice-hedging
+  namespace: {{ .Release.Namespace }}
+spec:
+  workloadSelector:
+    labels:
+      app: {{ .Values.recommendationService.name }}
+  configPatches:
+  - applyTo: HTTP_ROUTE
+    match:
+      context: SIDECAR_OUTBOUND
+      routeConfiguration:
+        vhost:
+          route:
+            name: "{{ .Values.productCatalogService.name }}"
+    patch:
+      operation: MERGE
+      value:
+        hedge_policy:
+          initial_requests: {{ .Values.requestHedging.services.recommendationservice.productcatalogservice.initial_requests }}
+          additional_request_chance:
+            numerator: {{ .Values.requestHedging.services.recommendationservice.productcatalogservice.additional_request_chance.numerator }}
+            denominator: {{ .Values.requestHedging.services.recommendationservice.productcatalogservice.additional_request_chance.denominator }}
+          hedge_on_per_try_timeout: {{ .Values.requestHedging.services.recommendationservice.productcatalogservice.hedge_on_per_try_timeout }}
+          max_requests: {{ .Values.requestHedging.services.recommendationservice.productcatalogservice.max_requests }}
+  - applyTo: HTTP_ROUTE
+    match:
+      context: SIDECAR_OUTBOUND
+      routeConfiguration:
+        vhost:
+          route:
+            name: "{{ .Values.productCatalogService.name }}"
+    patch:
+      operation: MERGE
+      value:
+        retry_policy:
+          retry_on: connect-failure,refused-stream,unavailable,cancelled,retriable-status-codes
+          num_retries: 1
+          per_try_timeout: 1s
+          retry_host_predicate:
+          - name: envoy.retry_host_predicates.previous_hosts
+          host_selection_retry_max_attempts: 3
+{{- end }}
+
+{{- end }} 

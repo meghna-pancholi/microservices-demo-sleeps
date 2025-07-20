@@ -189,6 +189,25 @@ spec:
         methods:
         - POST
         ports:
-        - "8080"
+        - "5000"
+{{- end }}
+{{- if .Values.emailService.virtualService.create }}
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ .Values.emailService.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  {{- with .Values.emailService.virtualService.hosts }}
+  hosts:
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+  http:
+  - route:
+    - destination:
+        host: {{ .Values.emailService.name }}
+        port:
+          number: 5000
 {{- end }}
 {{- end }}
