@@ -283,7 +283,7 @@ loadGenerator:
   #   tag: v0.10.2
   image:
     repository: meghnapancholi/online-boutique
-    tag: loadgenerator-product-only
+    tag: loadgenerator
   resources:
     requests:
       cpu: 300m
