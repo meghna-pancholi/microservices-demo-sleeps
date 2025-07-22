@@ -225,7 +225,12 @@ spec:
   {{- toYaml . | nindent 2 }}
   {{- end }}
   http:
-  - route:
+  - match:
+    - port: 7070
+    retries:
+      attempts: 3
+      perTryTimeout: 0.5s
+    route:
     - destination:
         host: {{ .Values.cartService.name }}
         port:

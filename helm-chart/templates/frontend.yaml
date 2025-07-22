@@ -289,5 +289,8 @@ spec:
         host: {{ .Values.frontend.name }}
         port:
           number: 80
+    retries:
+      attempts: 3
+      perTryTimeout: 0.5s
 {{- end }}
 {{- end }}

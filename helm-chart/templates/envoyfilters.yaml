@@ -26,13 +26,12 @@ spec:
     labels:
       app: {{ .Values.frontend.name }}
   configPatches:
-  - applyTo: HTTP_ROUTE
+  - applyTo: VIRTUAL_HOST
     match:
       context: SIDECAR_OUTBOUND
       routeConfiguration:
         vhost:
-          route:
-            name: "{{ .Values.productCatalogService.name }}"
+          name: "{{ .Values.productCatalogService.name }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.productCatalogService.port }}"
     patch:
       operation: MERGE
       value:
@@ -42,17 +41,6 @@ spec:
             numerator: {{ .Values.requestHedging.services.frontend.productcatalogservice.additional_request_chance.numerator }}
             denominator: {{ .Values.requestHedging.services.frontend.productcatalogservice.additional_request_chance.denominator }}
           hedge_on_per_try_timeout: {{ .Values.requestHedging.services.frontend.productcatalogservice.hedge_on_per_try_timeout }}
-          max_requests: {{ .Values.requestHedging.services.frontend.productcatalogservice.max_requests }}
-  - applyTo: HTTP_ROUTE
-    match:
-      context: SIDECAR_OUTBOUND
-      routeConfiguration:
-        vhost:
-          route:
-            name: "{{ .Values.productCatalogService.name }}"
-    patch:
-      operation: MERGE
-      value:
         retry_policy:
           retry_on: connect-failure,refused-stream,unavailable,cancelled,retriable-status-codes
           num_retries: 1
@@ -60,6 +48,7 @@ spec:
           retry_host_predicate:
           - name: envoy.retry_host_predicates.previous_hosts
           host_selection_retry_max_attempts: 3
+{{- end }}
 {{- end }}
 
 {{- /* EnvoyFilter for frontend to recommendationservice hedging */ -}}
@@ -75,13 +64,12 @@ spec:
     labels:
       app: {{ .Values.frontend.name }}
   configPatches:
-  - applyTo: HTTP_ROUTE
+  - applyTo: VIRTUAL_HOST
     match:
       context: SIDECAR_OUTBOUND
       routeConfiguration:
         vhost:
-          route:
-            name: "{{ .Values.recommendationService.name }}"
+          name: "{{ .Values.recommendationService.name }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.recommendationService.port }}"
     patch:
       operation: MERGE
       value:
@@ -91,17 +79,6 @@ spec:
             numerator: {{ .Values.requestHedging.services.frontend.recommendationservice.additional_request_chance.numerator }}
             denominator: {{ .Values.requestHedging.services.frontend.recommendationservice.additional_request_chance.denominator }}
           hedge_on_per_try_timeout: {{ .Values.requestHedging.services.frontend.recommendationservice.hedge_on_per_try_timeout }}
-          max_requests: {{ .Values.requestHedging.services.frontend.recommendationservice.max_requests }}
-  - applyTo: HTTP_ROUTE
-    match:
-      context: SIDECAR_OUTBOUND
-      routeConfiguration:
-        vhost:
-          route:
-            name: "{{ .Values.recommendationService.name }}"
-    patch:
-      operation: MERGE
-      value:
         retry_policy:
           retry_on: connect-failure,refused-stream,unavailable,cancelled,retriable-status-codes
           num_retries: 1
@@ -124,37 +101,24 @@ spec:
     labels:
       app: {{ .Values.frontend.name }}
   configPatches:
-  - applyTo: HTTP_ROUTE
+  - applyTo: VIRTUAL_HOST
     match:
       context: SIDECAR_OUTBOUND
       routeConfiguration:
         vhost:
-          route:
-            name: "{{ .Values.cartService.name }}"
+          name: "{{ .Values.cartService.name }}"
     patch:
       operation: MERGE
       value:
         hedge_policy:
-          initial_requests: {{ .Values.requestHedging.services.frontend.cartservice.initial_requests }}
+          initial_requests: 1
           additional_request_chance:
-            numerator: {{ .Values.requestHedging.services.frontend.cartservice.additional_request_chance.numerator }}
-            denominator: {{ .Values.requestHedging.services.frontend.cartservice.additional_request_chance.denominator }}
+            numerator: 1
           hedge_on_per_try_timeout: {{ .Values.requestHedging.services.frontend.cartservice.hedge_on_per_try_timeout }}
-          max_requests: {{ .Values.requestHedging.services.frontend.cartservice.max_requests }}
-  - applyTo: HTTP_ROUTE
-    match:
-      context: SIDECAR_OUTBOUND
-      routeConfiguration:
-        vhost:
-          route:
-            name: "{{ .Values.cartService.name }}"
-    patch:
-      operation: MERGE
-      value:
         retry_policy:
           retry_on: connect-failure,refused-stream,unavailable,cancelled,retriable-status-codes
           num_retries: 1
-          per_try_timeout: 1s
+          per_try_timeout: 0.5s  # Hedge if no response in 500ms
           retry_host_predicate:
           - name: envoy.retry_host_predicates.previous_hosts
           host_selection_retry_max_attempts: 3
@@ -173,33 +137,21 @@ spec:
     labels:
       app: {{ .Values.checkoutService.name }}
   configPatches:
-  - applyTo: HTTP_ROUTE
+  - applyTo: VIRTUAL_HOST
     match:
       context: SIDECAR_OUTBOUND
       routeConfiguration:
         vhost:
-          route:
-            name: "{{ .Values.cartService.name }}"
+          name: "{{ .Values.cartService.name }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.cartService.port }}"
     patch:
       operation: MERGE
       value:
         hedge_policy:
           initial_requests: {{ .Values.requestHedging.services.checkoutservice.cartservice.initial_requests }}
           additional_request_chance:
-            numerator: {{ .Values.requestHedging.services.checkoutservice.cartservice.additional_request_chance.numerator }}
+            numerator: {{ .Values.requestHedging.services.checkoutservice.cartservice.additional_request_chance.denominator }}
             denominator: {{ .Values.requestHedging.services.checkoutservice.cartservice.additional_request_chance.denominator }}
           hedge_on_per_try_timeout: {{ .Values.requestHedging.services.checkoutservice.cartservice.hedge_on_per_try_timeout }}
-          max_requests: {{ .Values.requestHedging.services.checkoutservice.cartservice.max_requests }}
-  - applyTo: HTTP_ROUTE
-    match:
-      context: SIDECAR_OUTBOUND
-      routeConfiguration:
-        vhost:
-          route:
-            name: "{{ .Values.cartService.name }}"
-    patch:
-      operation: MERGE
-      value:
         retry_policy:
           retry_on: connect-failure,refused-stream,unavailable,cancelled,retriable-status-codes
           num_retries: 1
@@ -222,13 +174,12 @@ spec:
     labels:
       app: {{ .Values.checkoutService.name }}
   configPatches:
-  - applyTo: HTTP_ROUTE
+  - applyTo: VIRTUAL_HOST
     match:
       context: SIDECAR_OUTBOUND
       routeConfiguration:
         vhost:
-          route:
-            name: "{{ .Values.productCatalogService.name }}"
+          name: "{{ .Values.productCatalogService.name }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.productCatalogService.port }}"
     patch:
       operation: MERGE
       value:
@@ -238,17 +189,6 @@ spec:
             numerator: {{ .Values.requestHedging.services.checkoutservice.productcatalogservice.additional_request_chance.numerator }}
             denominator: {{ .Values.requestHedging.services.checkoutservice.productcatalogservice.additional_request_chance.denominator }}
           hedge_on_per_try_timeout: {{ .Values.requestHedging.services.checkoutservice.productcatalogservice.hedge_on_per_try_timeout }}
-          max_requests: {{ .Values.requestHedging.services.checkoutservice.productcatalogservice.max_requests }}
-  - applyTo: HTTP_ROUTE
-    match:
-      context: SIDECAR_OUTBOUND
-      routeConfiguration:
-        vhost:
-          route:
-            name: "{{ .Values.productCatalogService.name }}"
-    patch:
-      operation: MERGE
-      value:
         retry_policy:
           retry_on: connect-failure,refused-stream,unavailable,cancelled,retriable-status-codes
           num_retries: 1
@@ -271,13 +211,12 @@ spec:
     labels:
       app: {{ .Values.checkoutService.name }}
   configPatches:
-  - applyTo: HTTP_ROUTE
+  - applyTo: VIRTUAL_HOST
     match:
       context: SIDECAR_OUTBOUND
       routeConfiguration:
         vhost:
-          route:
-            name: "{{ .Values.currencyService.name }}"
+          name: "{{ .Values.currencyService.name }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.currencyService.port }}"
     patch:
       operation: MERGE
       value:
@@ -287,17 +226,6 @@ spec:
             numerator: {{ .Values.requestHedging.services.checkoutservice.currencyservice.additional_request_chance.numerator }}
             denominator: {{ .Values.requestHedging.services.checkoutservice.currencyservice.additional_request_chance.denominator }}
           hedge_on_per_try_timeout: {{ .Values.requestHedging.services.checkoutservice.currencyservice.hedge_on_per_try_timeout }}
-          max_requests: {{ .Values.requestHedging.services.checkoutservice.currencyservice.max_requests }}
-  - applyTo: HTTP_ROUTE
-    match:
-      context: SIDECAR_OUTBOUND
-      routeConfiguration:
-        vhost:
-          route:
-            name: "{{ .Values.currencyService.name }}"
-    patch:
-      operation: MERGE
-      value:
         retry_policy:
           retry_on: connect-failure,refused-stream,unavailable,cancelled,retriable-status-codes
           num_retries: 1
@@ -320,13 +248,12 @@ spec:
     labels:
       app: {{ .Values.recommendationService.name }}
   configPatches:
-  - applyTo: HTTP_ROUTE
+  - applyTo: VIRTUAL_HOST
     match:
       context: SIDECAR_OUTBOUND
       routeConfiguration:
         vhost:
-          route:
-            name: "{{ .Values.productCatalogService.name }}"
+          name: "{{ .Values.productCatalogService.name }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.productCatalogService.port }}"
     patch:
       operation: MERGE
       value:
@@ -336,17 +263,6 @@ spec:
             numerator: {{ .Values.requestHedging.services.recommendationservice.productcatalogservice.additional_request_chance.numerator }}
             denominator: {{ .Values.requestHedging.services.recommendationservice.productcatalogservice.additional_request_chance.denominator }}
           hedge_on_per_try_timeout: {{ .Values.requestHedging.services.recommendationservice.productcatalogservice.hedge_on_per_try_timeout }}
-          max_requests: {{ .Values.requestHedging.services.recommendationservice.productcatalogservice.max_requests }}
-  - applyTo: HTTP_ROUTE
-    match:
-      context: SIDECAR_OUTBOUND
-      routeConfiguration:
-        vhost:
-          route:
-            name: "{{ .Values.productCatalogService.name }}"
-    patch:
-      operation: MERGE
-      value:
         retry_policy:
           retry_on: connect-failure,refused-stream,unavailable,cancelled,retriable-status-codes
           num_retries: 1
@@ -355,5 +271,3 @@ spec:
           - name: envoy.retry_host_predicates.previous_hosts
           host_selection_retry_max_attempts: 3
 {{- end }}
-
-{{- end }} 
