@@ -106,7 +106,7 @@ spec:
       context: SIDECAR_OUTBOUND
       routeConfiguration:
         vhost:
-          name: "{{ .Values.cartService.name }}"
+          name: "{{ .Values.cartService.name }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.cartService.port }}"
     patch:
       operation: MERGE
       value:
@@ -114,6 +114,7 @@ spec:
           initial_requests: 1
           additional_request_chance:
             numerator: 1
+            denominator: 1
           hedge_on_per_try_timeout: {{ .Values.requestHedging.services.frontend.cartservice.hedge_on_per_try_timeout }}
         retry_policy:
           retry_on: connect-failure,refused-stream,unavailable,cancelled,retriable-status-codes

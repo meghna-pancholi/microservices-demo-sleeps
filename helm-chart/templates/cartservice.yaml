@@ -220,10 +220,11 @@ metadata:
   name: {{ .Values.cartService.name }}
   namespace: {{ .Release.Namespace }}
 spec:
-  {{- with .Values.cartService.virtualService.hosts }}
   hosts:
-  {{- toYaml . | nindent 2 }}
-  {{- end }}
+    - {{ .Values.cartService.name }}.{{ .Release.Namespace }}.svc.cluster.local
+    - {{ .Values.cartService.name }}
+    - {{ .Values.cartService.name }}.{{ .Release.Namespace }}
+    - {{ .Values.cartService.name }}.{{ .Release.Namespace }}.svc
   http:
   - match:
     - port: 7070
@@ -232,7 +233,7 @@ spec:
       perTryTimeout: 0.5s
     route:
     - destination:
-        host: {{ .Values.cartService.name }}
+        host: {{ .Values.cartService.name }}.{{ .Release.Namespace }}.svc.cluster.local
         port:
           number: 7070
 {{- end }}
